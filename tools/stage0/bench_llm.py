@@ -177,6 +177,16 @@ def compactResult(result):
     return kept
 
 
+def warmUp(args):
+    """모델 적재 시간이 첫 측정에 섞이지 않도록 짧은 요청을 먼저 보낸다. 적재 시간 기록용(S0-02)."""
+    messages = [{"role": "user", "content": "안녕하세요."}]
+    result = llm_client.streamChat(
+        args.baseUrl, args.model, messages, api=args.api, maxTokens=8,
+        numCtx=args.numCtx, seed=args.seed, timeoutSec=args.timeout,
+    )
+    return {"experiment": "warmup", "label": "load", **compactResult(result)}
+
+
 def experimentCtx(args, emit):
     for chars in args.ctxChars:
         for repeat in range(args.repeats):
@@ -298,6 +308,7 @@ def main(argv=None):
             status = "ok" if row["ok"] else f"FAIL {row.get('error')}"
             print(f"[{row['experiment']}/{row['label']}] {status}", flush=True)
 
+        emit(warmUp(args))
         for name in args.experiments:
             EXPERIMENTS[name](args, emit)
 

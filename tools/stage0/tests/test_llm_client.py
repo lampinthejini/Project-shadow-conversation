@@ -174,6 +174,14 @@ def test_releaseLatency_failedJudgeMeansNoRelease(stubServer):
     assert result["releaseMs"] is None
 
 
+def test_warmUp_isRecordedSeparately(stubServer):
+    args = bench_llm.parseArgs(["--model", "m", "--base-url", baseUrl(stubServer)])
+    row = bench_llm.warmUp(args)
+    assert row["experiment"] == "warmup"
+    assert row["ok"] is True
+    assert "text" not in row
+
+
 def test_summarize_groupsAndComputesStats():
     rows = [
         {"experiment": "ctx", "label": "1k", "ok": True, "ttftMs": v, "totalMs": v * 2}
